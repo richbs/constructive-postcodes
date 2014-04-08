@@ -9,8 +9,41 @@
  * License: BSD
  */
 
+global $cpc_table_name;
+global $wpdb;
+$cpc_table_name = $wpdb->prefix . 'constructive_postcodes';
 
-function constructive_validate_text_postcode($result, $tag) {
+function cpc_install() {
+	global $wpdb;
+	global $cpc_table_name;
+	$sql = "CREATE TABLE $cpc_table_name (
+	  id mediumint(9) NOT NULL AUTO_INCREMENT,
+	  postcode VARCHAR(8) DEFAULT '' NOT NULL,
+	  postcode_slug VARCHAR(7) DEFAULT '' NOT NULL,
+	  UNIQUE KEY id (id),
+	  UNIQUE KEY postcode (postcode),
+	  UNIQUE KEY postcode_slug (postcode_slug)
+	);";
+	var_dump($sql);
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	dbDelta( $sql );
+}
+
+register_activation_hook( __FILE__, 'cpc_install' );
+
+function cpc_uninstall()
+{
+	global $wpdb;
+	global $cpc_table_name;
+
+	$table_name = $wpdb->prefix . 'constructive_postcodes';
+	$sql = "DROP TABLE $cpc_table_name;";
+	$wpdb->query($sql);
+}
+
+register_deactivation_hook(__FILE__, 'cpc_uninstall');
+
+function cpc_validate_text_postcode($result, $tag) {
 	$type = $tag['type'];
 	$name = $tag['name'];
 
