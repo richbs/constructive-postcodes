@@ -31,26 +31,21 @@ function cpc_install() {
 	  UNIQUE KEY postcode (postcode),
 	  UNIQUE KEY postcode_slug (postcode_slug)
 	);";
-	var_dump($sql);
 	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 	dbDelta( $sql );
 
+	ini_set('max_execution_time', 120);
 
-	// Install initiial data
-	$postcodes = array('CB1 2QG', 'N4 4NL', 'S8 9EG');
-	foreach ($postcodes as $pc) {
-		$pc_slug = slugify_postcode($pc);
+	$london_pcs = fopen(CPC_PLUGIN_DIR.'/London_postcodes.csv', 'r');
+
+	while (($row = fgetcsv($london_pcs, 1000, ",")) !== false) {
+		$pc = $row[0];
+		$pc_slug = slugify_postcode( $pc );
 		$affected_rows = $wpdb->insert(
 			$cpc_table_name,
 			array('postcode' => $pc, 'postcode_slug' => $pc_slug)
 		);
 	}
-	/**
-	$london_pcs = fopen(CPC_PLUGIN_DIR.'/London_postcodes.csv', 'r');
-	while (($row = fgetcsv($london_pcs, 1000, ",")) !== false) {
-		var_dump($row[1]);
-	}
-	*/
 }
 
 register_activation_hook( __FILE__, 'cpc_install' );
@@ -95,5 +90,5 @@ function cpc_validate_text_postcode($result, $tag) {
 	return $result;
 }
 
-add_filter( 'CPC_validate_text', 'cpc_validate_text_postcode', 10, 2 );
-add_filter( 'CPC_validate_text*', 'cpc_validate_text_postcode', 10, 2 );
+add_filter( 'wpcf7_validate_text', 'cpc_validate_text_postcode', 10, 2 );
+add_filter( 'wpcf7_validate_text*', 'cpc_validate_text_postcode', 10, 2 );
